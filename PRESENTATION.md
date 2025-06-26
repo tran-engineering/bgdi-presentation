@@ -1,372 +1,218 @@
-# CORIX - WORKSHOP
+# Fallbeispiele PP BGDI Team
 
-## Conditional / dynamic policies in front- and backend
-
-23.01.2025 / Khôi Tran
+## Khôi Tran - 26.06.2025
 
 ---
 
-## Agenda
-
-1. Introductions
-2. Scope of workshop
-3. Conditional / dynamic policies
-4. Food for thought when implementing conditional / dynamic policies
+# Fallbeispiel 1: Authentifizierung
 
 ---
 
-## Agenda (2)
+## a) Wie gehst du vor, um die Ist-Architektur zu beschreiben?
 
-5. Sample implementation: DEMO
-6. Hands-on: Try to check out the code and run it.
-7. Dynamic Programming in Spring Framework
-8. Dynamic Programming in Angular
-9. Sample implementation: Code Review
-
----
-
-## Formalities
-
-Presentation is available at:
-
-https://tran-engineering.github.io/corix-workshop/
-
-Code:
-
-https://tran-engineering.github.io/corix-backend/
-
-https://tran-engineering.github.io/corix-frontend/
+Übersicht beschaffen durch:
+1. Dokumentation studieren
+2. Code, Deployments, Konfigurationen anschauen
+3. Welche Auth Verfahren werden momentan genutzt?
+    - Basic Auth
+    - OAUTH2 / OIDC
+    - Eigene Implementationen
+5. Interviews mit Entwicklern
+    - DEMO der Applikationen
+    - Wo befinden sich momentan die grössten Pain-Points?
 
 ---
 
-## Disclaimers
+## a) Ist-Architektur (Teil 2)
 
-The code is by no means a complete or even recommended solution.
+6. Welches Authorization Schema wurde implementiert?
+    - RBAC
+    - ReBAC
+    - ABAC
+7. Welche Softwarekomponenten untersützen bereits welche Authentisierungs- und Authorisierungsmechanismen?
+8. Gibt es User Lifecycle-Prozesse, wenn ja:
+    - Wie werden neue User angelegt?
+    - Wann werden sie gelöscht / aufgeräumt
+9. M2M Kommunikation
+    - Wie ist der Prozess für M2M Accounts?
 
-It is a proof-of-concept to make it easier to understand and think about
-the challenges and to facilitate writing requirements.
-
----
-
-# Introductions
-
----
-
-## Introductions
-
-Tell me about yourselves and knowledge about:
-
-* Java Reflection, Annotations
-* Spring Framework
-* Angular / RxJS
+10. Werden API-Gateways eingesetzt (AWS API Gateway, 3scale, ...)?
 
 ---
 
-# Scope of workshop
+## b) Wie könnte eine Lösungsarchitektur aussehen? Sind allenfalls Varianten denkbar?
+
+In der Industrie hat sich für solche Fälle nur ein Standard durchgesetzt:
+
+OIDC/OAUTH2, jedoch sind in der Umsetzung verschiedene Varianten denkbar.
 
 ---
 
-## Goal of workshop
+## Requirements weiter schärfen
 
-* Introduction to dynamic programming in combination with Spring and Angular
-* Learn about what's important about permission policies
-* Get a feeling of what requirements you expect from a permission system
-* Allow you to move forward
-
-## Out of Scope
-
-* Security
-  * OAuth2, OICD, JWT
-  * Row-Based security (usually known as "Mandantenfähigkeit")
-  * User authentication / authorization
-* Deployment / Build
+- Anbindung externe IdP? AGOV, SwitchAAI, etc.
+- Wie werden "Spezialfälle" gehandhabt (Service-Accounts, M2M Accounts)?
+- Zuständigkeiten (wer hat welche Rechte im Benutzermanagement) / Prozesse definieren und dokumentieren
 
 ---
 
-# Dynamic / conditional policies
+## AWS hauseigene Implementation: AWS Cognito
+
+Vorteile:
+
+- Gut integriert mit anderen AWS services (AWS IAM)
+- Tiefe Betriebskosten (MaM - monthly active users)
+
+Nachteile:
+- komplizierte SSO-Federation Szenarien nicht möglich
+- Feingranulares Rechte/Rollenmanagement
+- Login-Flow und Tokeninhalte nicht anpassbar
 
 ---
 
-## Dynamic / conditional policies vs RBAC, ReBAC, ABAC
+## Opensource: Keycloak / RedHat SSO
 
-Most RBAC, ReBAC, ABAC implementations are not dynamic.
+Vorteile:
+- Viele Stellen im Bund nutzen Keycloak
+- Anbindbar an praktisch alle IdP
+- Stark anpassbar (wenn auch manchmal bisschen kompliziert)
+- Alles in eigener Hand
 
----
-
-## Column based security
-
-Access to attributes / fields, depending on:
-
-- User Role (RBAC)
-- Access rights (ABAC)
-- Relation of User to the entity/field (ReBAC)
+Nachteile:
+- Wartung (neue Versionen, Migrationen)
 
 ---
 
-## Dynamic / conditional policies
+## SaaS: Auth0
 
-The user can only mutate state of the environment / entity / user:
+Vorteile:
+- Muss nicht gewartet werden
+- Hohe SLA
+- externe IdPs auch unterstützt
+- einfache Kostenkontrolle
 
-- Mutate `description` only when `state != DONE`
-- Only allowed to schedule `meetings` in the future
-
----
-
-# Open source product for dynamic policies: Casbin
-
----
-
-## Casbin
-
-Slide 1: Introduction to Casbin
-
-Casbin is an open-source, high-performance access control library that provides a simple and efficient way to manage permissions and access control in your application.
-
-Support for Java, Javascript, Go, Python and many more.
+Nachteile:
+- Vertrauen an ein Drittanbieter
 
 ---
 
-## Casbin Key features
+## c) Lösung im AWS Umfeld
 
-* Policy-based Access Control (PBAC)
-* Role-based Access Control (RBAC)
-* Attribute-based Access Control (ABAC)
-
----
-
-## Is Casbin the correct choice?
-
-Access control mainly deals with decisions whether a subject has permission on entities or actions.
-
-It does not have direct support for UI/UX related things.
-But it can be engineered to do so.
+1. Variantenentscheid
+2. Verantwortlichkeiten / Monitoring / Wartung klären
+3. Aufsetzen des OIDC Services
+4. Prototypen / Demo-Applikationen für die neue Authentifizierung erstellen
+5. Szenarien mit verschiedenen Rollen/Rechten präsentieren
+6. Zero-Trust Ansatz?
 
 ---
 
-# Food for thought when implementing conditional / dynamic policies
+## d) Transition
+
+Aus Erfahrung:
+
+Migration stufenweise: kein Big-Bang, Services nach-und-nach Migrieren.
+
+1. Schulung für Entwickler zu OAUTH2/OIDC
+    - Demos
+    - Blueprints
+    - Tutorials
+2. Schulung für Support (Prozesse, Passwort-, MFA Reset)
+3. Parallelbetrieb notwendig? (M2M)
+  - Sync von Benutzeraccounts ins neue System
+4. OAuth2Proxy für einfache Anwendungen
+5. ClientSecret rotation prozess
+    - Notifikation wenn Secret abläuft
+    - Automatische rotierung der Secrets (z.B. AWS Secrets Manager, Hashicorp Vault)
 
 ---
 
-## Self-made or Open-Source / Commercial implementation
-
-- Evaluation of OSS products can be tedious and must be done carefully.
-- Self-made needs good knowledge about dynamic / meta-programming
+# Fallbeispiel 2: Datenmanagement
 
 ---
 
-## Software component lifecycle
+## a) Welche Grundlagen müssen erarbeitet werden, um eine Lösung skizzieren zu können?
 
-Many companies have separate lifecycles for components of a system.
-Maybe this leads to separate implementations of policy enforcement too,
-since it is hard to keep it in sync.
+IST-Zustand dokumentieren:
 
----
+- Übersicht für aktuelles Datenmodell erschaffen
+- Was gibt es Datenflüsse und wann?
+- Was für Schwächen im aktuellen Modell gibt es?
+    - Daten-Abhängkeiten
+    - Dateninkonsistenz / Dubletten / Datenqualität
 
-## User Experience
+--- 
 
-- Frontend policy validation
-- Live vs onsubmit policy checking.
-  Are the policies checked on the current/new entity or does it need to support both?
+## a) Grundlagenerarbeitung (2)
 
----
+- Governance: Wer besitzt welche Daten
+- Wie, wann und worüber werden Abnehmer informiert, wenn neue Daten verfügbar sind
+- Zugriffsrechte und Nutzungsszenarien:
+    - Wer hat auf welche Daten Zugriff?
 
-## Developer Experience
+Methoden:
 
-- Single source of truth, not managing policies differently on front- / backend
-- Policies must be located near/at entities
-- Must be easy to understand / maintain
-  - Introducing new policy/entity should not require modifying code in multiple places
-
----
-
-# Sample implementation: DEMO
+- ERD Diagramme
+- Data Lineage Tools
+- Interviews / Workshops
 
 ---
 
-## Backend
+## b) Wie würdest du die Transition gestalten?
 
-- Spring Boot
-- REST
-- Single Value Update
+## Ziel erarbeiten
 
----
+In Zusammenarbeit mit Domänenexpert*innen, Data-Engineers, Entwickler, Betreiber:
 
-## Frontend
-
-- Angular
-- Live Policy Checking
-
----
-
-# Hands-On: Try to checkout and run the front- and backend
+### Zielmodell:
+- Welche Ziele werden im neuen Modell verfolgt?
+- Modellentscheide dokumentieren (welche Schwächen werden bewusst nicht angegangen)
+- Neue Funktionen
+- Rückwärtskompatibilität
 
 ---
 
-## Clone repository
+## b) Transitionsgestaltung (2)
 
-Requirements: Java 21, Node 22
-
-```bash
-git clone https://github.com/tran-engineering/corix-backend.git
-cd corix-backend
-./gradlew bootRun
-```
-
-
-```bash
-git clone https://github.com/tran-engineering/corix-frontend.git
-cd corix-frontend
-npm start
-```
+### Sonstige Rahmenbedingungen:
+- Welche Storage Technologie / Persistenz?
+- Werden andere, neue Schnittstelltypen und -formate gewünscht?
+    - REST / Messaging / Kafka / GraphQL / SPARQL / ...
+    - JSON / Protobuf / YAML / XML / ...
 
 ---
 
-# Dynamic programming in Spring Framework
+## Migrationsphasen definieren
+
+- Neue Datenpipeline parallel aufbauen
+- Splitbrainphase / Datensync, Datenqualität sicherstellen
+- Stufenweise Services migrieren
+- Abschaltung / Umschaltung der Altsysteme
 
 ---
 
-## Annotations
+## c) Wie würdest du sicherstellen, dass die Umsetzung gemäss der Skizze erfolgt?
 
-- Annotations are metadata that can be placed in code.
-- Provide additional information, without being part of the program itself
-- Can be used by compiler and runtime
-
-Spring Boot already heavely uses annotations.
-
----
-
-## Annotation Examples
-
-Working with Annotations during Runtime requires Java Reflection.
-
-```java
-@interface Important {
-}
-
-@Value
-public class Banana {
-    private boolean isTasty;
-
-    @Important
-    private String sourceCountry;
-
-    @Important
-    private BigDecimal price;
-
-    List<Field> getImportantFields() {
-        return Arrays.stream(Banana.class.getDeclaredFields())
-                .filter(field -> field.isAnnotationPresent(Important.class))
-                .toList();
-    }
-}
-```
+- Grober Migrationsplan mit Meilensteinen definieren
+- Meilensteine regelmässig überprüfen
+- Monitoring/Alarming von alten und neuen Schnittstellen
+- Datenqualität, Datenkonstistenz regelmässig prüfen
 
 ---
 
-## SpEl: Spring Expression Language
+## d) Chancen und Risiken
 
-SpEl is a expression language, that is mainly used in Spring Security, Spring Integration, Spring Data Repository.
+### Chancen
 
-Most commonly known example is the usage in Spring Data Repositories:
+- Einheitliche Datenbasis und Ressourcenmanagement:
+  - Validierung, Konsistenzüberprüfung kann an einer Stelle und an einem Zeitpunkt geschehen
+  - Ein Flaschenhals kann schneller identifiziert und behoben werden
+- Weniger Wartungs- und Koordinationsaufwand
 
-```java
-public interface UserRepository extends JpaRepository<User, Long> {
+### Risiken
 
-    @Query("SELECT u FROM User u WHERE u.username = :#{#username}")
-    List<User> findByUsername(@Param("username") String username);
-
-    @Query("SELECT u FROM User u WHERE u.email = :#{#email}")
-    List<User> findByEmail(@Param("email") String email);
-}
-```
-
----
-
-# Dynamic programming in Angular / Typescript
-
----
-
-## Expression parsing in JS
-
-- Javascript native `eval` or `new Function()`
-- Use a library `parse-eval`, `@casbin/expression-eval`
-
----
-
-## Native `eval`
-
-```javascript
-function evalWithContext(js, context) {
-    //# Return the results of the in-line anonymous function we .call with the passed context
-    return function() { return eval(js); }.call(context);
-}
-
-evalWithContext('this.todo.state === "DONE"', {todo: {state: 'DONE'}});
-```
-
-Is not recommended, since it has much more possibilities to be insecure, as the code is run in the JS runtime.
-
----
-
-## `new Function()`
-
-```javascript
-function evalWithContext(js, context) {
-    //# Return the results of the in-line anonymous function we .call with the passed context
-    return new Function(js).call(context);
-}
-
-evalWithContext('return this.todo.state === "DONE"', {todo: {state: 'DONE'}});
-```
-
----
-
-## Use libraries like `@casbin/expression-eval`
-
-`@casbin/expression/eval` is the expression parser for Casbin.
-
-We can use that for ourselves:
-
-```typescript
-const result = casbinEval(casbinParse("todo.state == 'DONE'"), {todo: {state: 'DONE'}});
-```
-
-Doesn't use `eval()` or similar internally
-
----
-
-# Sample implementation: Code Review
-
----
-
-## Backend
-
-- Uses JPA with Spring Data
-- Use Spring Data Repositories to access `@Entity` classes
-- `@EditableIf`, `@VisibleIf` annotations
-- PolicyController
-
----
-
-## Frontend
-
-<pre class="mermaid">
-
-sequenceDiagram
-    Frontend -->> Backend: Fetch entity
-    Frontend -->> Backend: Fetch policies
-    Frontend -->> Frontend: Evaluate & Apply EditableIf policy
-    Frontend -->> Frontend: Evaluate & Apply Visible policy
-
-</pre>
-
----
-
-## Policy
-
-Policy evaluation is done in `policy.service.ts`
-
----
-
-
-# Thank you & Questions
+- Funktionalität von Alt- / Fremdsystemen muss u.U. nachgebaut werden
+- Politikum / Akzeptanzprobleme bei Stakeholdern von Alt- / Fremdsystemen
+- Unvorausgesehene Migrationsprobleme
+- Zentralisierung / Vereinheitlichung der Datenmodelle kann die Komplexität exponentiell steigern
+- Höhere Anforderungen an SLA
