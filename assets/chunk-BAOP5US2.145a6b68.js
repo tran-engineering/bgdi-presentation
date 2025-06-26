@@ -1,0 +1,1 @@
+import{_ as l}from"./vendor.579cef01.js";function m(c,e){var i,o,t;c.accDescr&&((i=e.setAccDescription)==null||i.call(e,c.accDescr)),c.accTitle&&((o=e.setAccTitle)==null||o.call(e,c.accTitle)),c.title&&((t=e.setDiagramTitle)==null||t.call(e,c.title))}l(m,"populateCommonDb");export{m as p};
